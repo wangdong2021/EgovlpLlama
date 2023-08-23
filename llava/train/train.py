@@ -21,7 +21,7 @@ import json
 import logging
 import pathlib
 from typing import Dict, Optional, Sequence, List
-
+from IPython import embed
 import torch
 
 import transformers
@@ -96,6 +96,7 @@ class TrainingArguments(transformers.TrainingArguments):
         default=16,
         metadata={"help": "How many bits to use."}
     )
+    device: torch.device = field(default=torch.device("cpu"), metadata={"help": "device to train"})
     lora_enable: bool = False
     lora_r: int = 64
     lora_alpha: int = 16

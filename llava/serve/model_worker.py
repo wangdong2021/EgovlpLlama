@@ -28,7 +28,7 @@ from threading import Thread
 GB = 1 << 30
 
 worker_id = str(uuid.uuid4())[:6]
-logger = build_logger("model_worker", f"model_worker_{worker_id}.log")
+# logger = build_logger("model_worker", f"model_worker_{worker_id}.log")
 global_counter = 0
 
 model_semaphore = None
@@ -60,7 +60,7 @@ class ModelWorker:
         else:
             self.model_name = model_name
 
-        logger.info(f"Loading the model {self.model_name} on worker {worker_id} ...")
+        # logger.info(f"Loading the model {self.model_name} on worker {worker_id} ...")
         self.tokenizer, self.model, self.image_processor, self.context_len = load_pretrained_model(
             model_path, model_base, self.model_name, load_8bit, load_4bit)
         self.is_multimodal = 'llava' in self.model_name.lower()
@@ -265,10 +265,10 @@ if __name__ == "__main__":
     parser.add_argument("--load-8bit", action="store_true")
     parser.add_argument("--load-4bit", action="store_true")
     args = parser.parse_args()
-    logger.info(f"args: {args}")
+    # logger.info(f"args: {args}")
 
-    if args.multi_modal:
-        logger.warning("Multimodal mode is automatically detected with model name, please make sure `llava` is included in the model path.")
+    # if args.multi_modal:
+        # logger.warning("Multimodal mode is automatically detected with model name, please make sure `llava` is included in the model path.")
 
     worker = ModelWorker(args.controller_address,
                          args.worker_address,

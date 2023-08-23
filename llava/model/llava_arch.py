@@ -14,7 +14,7 @@
 
 
 from abc import ABC, abstractmethod
-
+from IPython import embed
 import torch
 import torch.nn as nn
 
@@ -91,7 +91,22 @@ class LlavaMetaForCausalLM(ABC):
             if past_key_values is not None and vision_tower is not None and images is not None and input_ids.shape[1] == 1:
                 attention_mask = torch.ones((attention_mask.shape[0], past_key_values[-1][-1].shape[-2] + 1), dtype=attention_mask.dtype, device=attention_mask.device)
             return input_ids, attention_mask, past_key_values, None, labels
-
+        # if (type(images) is list and images[0].ndim == 4) or (type(images) is not list and images.ndim == 5):
+        #     concat_images = torch.cat(images).to(vision_tower.device)
+        #     image_features = self.encode_images(concat_images)
+        #     split_sizes = [image.shape[0] for image in images]
+        #     image_features = torch.split(image_features, split_sizes, dim=0)
+        #     image_features = [x.flatten(0, 1).to(images[0].device) for x in image_features]
+        # elif type(images) is list and images[0].ndim == 3:
+        #     images = torch.stack(images, dim=0)
+        #     device = images.device
+        #     images.to(vision_tower.device)
+        #     image_features = self.encode_images(images)
+        #     image_features.to(device)
+        #     image_features = image_features.mean(dim=0).unsqueeze(0)
+        # else:
+        #     image_features = self.encode_images(images)
+        device2 = torch.device('cuda', index=1)
         if type(images) is list or images.ndim == 5:
             concat_images = torch.cat([image for image in images], dim=0)
             image_features = self.encode_images(concat_images)
@@ -99,7 +114,10 @@ class LlavaMetaForCausalLM(ABC):
             image_features = torch.split(image_features, split_sizes, dim=0)
             image_features = [x.flatten(0, 1) for x in image_features]
         else:
+            device1 = images.device
+            images.to(device2)
             image_features = self.encode_images(images)
+            image_features.to(device1)
 
         new_input_embeds = []
         new_labels = [] if labels is not None else None
@@ -131,6 +149,7 @@ class LlavaMetaForCausalLM(ABC):
                     if labels is not None:
                         cur_new_labels.append(cur_labels[:image_token_start])
                         cur_new_labels.append(torch.full((cur_image_features.shape[0],), IGNORE_INDEX, device=labels.device, dtype=labels.dtype))
+                        # TODO why don't append cur_labels[image_token_start+1:image_token_start+2]?
                         cur_new_labels.append(cur_labels[image_token_start:image_token_start+1])
                         cur_labels = cur_labels[image_token_start+2:]
                 else:
